@@ -17,7 +17,7 @@ Research-only sportdata- en marktanalyses. Geen betslip, weddenschappen, stortin
 ## Deploy naar Vercel + GitHub
 1. Upload de volledige inhoud van deze map naar je GitHub repository. Behoud `api/`, `api/lib/`, `lib/`, `tests/`, `index.html`, `package.json` en `vercel.json`.
 2. Importeer de repository via https://vercel.com/new. Framework Preset: **Other**. Geen build command nodig.
-3. In Vercel → Project → Settings → Environment Variables: voeg `THE_ODDS_API_KEY` toe. Optioneel `ODDS_REGIONS`, `ODDS_MARKETS`, `ODDS_CONCURRENCY`.
+3. In Vercel → Project → Settings → Environment Variables: voeg `ODDS_API_KEY` toe (of behoud `ODDS_API_KEY` of `THE_ODDS_API_KEY`; beide namen worden ondersteund). Optioneel `ODDS_REGIONS`, `ODDS_MARKETS`, `ODDS_CONCURRENCY`.
 4. Optioneel `OPENAI_API_KEY` toevoegen om AI-uitleg te activeren. Zonder deze key is de deterministische uitleg actief.
 5. Deploy of redeploy na het wijzigen van environment variables.
 
