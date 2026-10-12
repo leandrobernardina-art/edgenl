@@ -4,9 +4,9 @@ module.exports = async function handler(req, res) {
     res.setHeader("Allow", "GET");
     return res.status(405).json({ error: "Methode niet toegestaan." });
   }
-  const key = process.env.THE_ODDS_API_KEY;
+  const key = process.env.ODDS_API_KEY || process.env.THE_ODDS_API_KEY;
   if (!key) return res.status(503).json({
-    error: "Voeg THE_ODDS_API_KEY toe bij Vercel → Settings → Environment Variables en deploy opnieuw."
+    error: "Sportdata-API-key ontbreekt. Voeg ODDS_API_KEY (aanbevolen) of THE_ODDS_API_KEY toe bij Vercel → Settings → Environment Variables en deploy opnieuw."
   });
   const regions = String(req.query.regions || process.env.ODDS_REGIONS || "eu,uk,us")
     .split(",").map(s => s.trim()).filter(Boolean).filter(s => ["us","us2","uk","eu","au"].includes(s));
