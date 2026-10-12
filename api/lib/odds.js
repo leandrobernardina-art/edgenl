@@ -53,7 +53,10 @@ async function getOdds({ key, regions }) {
     sportCount: sports.length,
     partial: failures.length > 0,
     failedSports: failures.length,
-    note: "Beschikbaarheid hangt af van abonnement, regio en upstream quotas."
+    note: "Beschikbaarheid hangt af van abonnement, regio en upstream quotas.",
+    regions,
+    markets: process.env.ODDS_MARKETS || "h2h,spreads,totals",
+    failureDetails: failures.slice(0, 5).map(f => ({ sport: f.sport, status: f.status, message: f.message }))
   };
 }
 module.exports = { getOdds };
