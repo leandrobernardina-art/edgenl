@@ -1,0 +1,12 @@
+{
+  "name": "edge-sports-intelligence",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Nederlands sports analytics platform, zonder wedfunctionaliteit",
+  "scripts": {
+    "test": "node tests/market-math.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

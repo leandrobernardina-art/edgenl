@@ -1,0 +1,12 @@
+const assert = require("node:assert/strict");
+const { impliedProbability, normalizeProbabilities, priceRange } = require("../lib/market-math");
+assert.equal(impliedProbability(2), 0.5);
+assert.equal(impliedProbability(1), null);
+assert.equal(impliedProbability("not a number"), null);
+const market = normalizeProbabilities([{ name:"A", price:2 }, { name:"B", price:2 }]);
+assert.ok(Math.abs(market.overround) < 1e-12);
+assert.ok(Math.abs(market.outcomes[0].normalizedProbability - 0.5) < 1e-12);
+assert.equal(normalizeProbabilities([{price:2},{price:1}]), null);
+const range = priceRange([2.1, 2.3, 1, "x"]);
+assert.equal(range.min, 2.1); assert.equal(range.max, 2.3); assert.equal(range.count, 2); assert.ok(Math.abs(range.spread - 0.2) < 1e-12);
+console.log("Alle market-math tests geslaagd.");
