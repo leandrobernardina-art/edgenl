@@ -143,7 +143,7 @@ function renderOverview(){
  $("metricFreshness").textContent=state.lastFetched?"Laatste succesvolle ophalen":"Geen update ontvangen";
  $("metricEventsSub").textContent=state.events.length?"Opgehaald uit aangesloten feed":"Wacht op databron";
  $("overviewCount").textContent=`${state.events.length} evenementen`;
- if(!state.events.length){$("overviewEvents").innerHTML=`<div class="empty">${esc(state.error||"Nog geen data. Voeg THE_ODDS_API_KEY toe in Vercel en ververs de feed.")}</div>`}
+ if(!state.events.length){$("overviewEvents").innerHTML=`<div class="empty">${esc(state.error||"Nog geen data. Voeg ODDS_API_KEY of THE_ODDS_API_KEY toe in Vercel en ververs de feed.")}</div>`}
  else{$("overviewEvents").innerHTML=`<div class="table-wrap"><table class="table" style="min-width:500px"><thead><tr><th>Wedstrijd</th><th>Sport</th><th>Markten</th></tr></thead><tbody>${state.events.slice(0,8).map(e=>`<tr><td><div class="event">${esc(eventName(e))}</div><div class="subline">${esc(e.sport_title||"")}</div></td><td>${esc(sportName(e))}</td><td>${marketTypes(e).length} <span class="tiny">markttypen</span></td></tr>`).join("")}</tbody></table></div>`}
  const rows=getMarketRows();const signals=[];
  if(rows.length){const spread=rows.map(r=>({r,d:r.best-r.worst})).sort((a,b)=>b.d-a.d)[0];if(spread&&spread.d>0)signals.push({title:"Prijsverschil waargenomen",badge:`+${fmt(spread.d)}`,text:`${eventName(spread.r.event)} · ${spread.r.name}. De hoogste en laagste quote verschillen ${fmt(spread.d)} decimale punten. Vergelijk alleen dezelfde markt en lijn.`});
