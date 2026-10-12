@@ -8,7 +8,7 @@ module.exports = async function handler(req, res) {
   if (!key) return res.status(503).json({
     error: "Sportdata-API-key ontbreekt. Voeg ODDS_API_KEY (aanbevolen) of THE_ODDS_API_KEY toe bij Vercel → Settings → Environment Variables en deploy opnieuw."
   });
-  const regions = String(req.query.regions || process.env.ODDS_REGIONS || "eu,uk,us")
+  const regions = String(req.query.regions || process.env.ODDS_REGIONS || "eu")
     .split(",").map(s => s.trim()).filter(Boolean).filter(s => ["us","us2","uk","eu","au"].includes(s));
   if (!regions.length) return res.status(400).json({ error: "Geen geldige oddsregio gekozen." });
   try {
