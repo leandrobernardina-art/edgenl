@@ -89,7 +89,7 @@
 <div id="toast" class="toast hidden"></div>
 <script>
 const $=id=>document.getElementById(id);
-const state={events:[],lastFetched:null,regions:"eu,uk,us",loading:false,error:null};
+const state={events:[],lastFetched:null,regions:"eu",loading:false,error:null,feedMeta:null};
 const views=["overview","events","markets","analysis","props","method"];
 const fmt=(n,d=2)=>Number.isFinite(Number(n))?new Intl.NumberFormat("nl-NL",{minimumFractionDigits:d,maximumFractionDigits:d}).format(Number(n)):"—";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -143,14 +143,14 @@ function renderOverview(){
  $("metricFreshness").textContent=state.lastFetched?"Laatste succesvolle ophalen":"Geen update ontvangen";
  $("metricEventsSub").textContent=state.events.length?"Opgehaald uit aangesloten feed":"Wacht op databron";
  $("overviewCount").textContent=`${state.events.length} evenementen`;
- if(!state.events.length){$("overviewEvents").innerHTML=`<div class="empty">${esc(state.error||"Nog geen data. Voeg ODDS_API_KEY of THE_ODDS_API_KEY toe in Vercel en ververs de feed.")}</div>`}
+ if(!state.events.length){const emptyMessage=state.error|| (state.feedMeta?.partial?`De provider gaf geen wedstrijden terug en ${state.feedMeta.failedSports} sportaanvragen mislukten. Controleer API-quota, regio en ondersteunde markten.`:"De API is bereikbaar, maar gaf geen aankomende wedstrijden terug voor regio "+(state.feedMeta?.regions||state.regions)+". Dit is geen demo-data. Probeer later opnieuw of controleer de beschikbare sporten bij The Odds API.");$("overviewEvents").innerHTML=`<div class="empty">${esc(emptyMessage)}</div>`}
  else{$("overviewEvents").innerHTML=`<div class="table-wrap"><table class="table" style="min-width:500px"><thead><tr><th>Wedstrijd</th><th>Sport</th><th>Markten</th></tr></thead><tbody>${state.events.slice(0,8).map(e=>`<tr><td><div class="event">${esc(eventName(e))}</div><div class="subline">${esc(e.sport_title||"")}</div></td><td>${esc(sportName(e))}</td><td>${marketTypes(e).length} <span class="tiny">markttypen</span></td></tr>`).join("")}</tbody></table></div>`}
  const rows=getMarketRows();const signals=[];
  if(rows.length){const spread=rows.map(r=>({r,d:r.best-r.worst})).sort((a,b)=>b.d-a.d)[0];if(spread&&spread.d>0)signals.push({title:"Prijsverschil waargenomen",badge:`+${fmt(spread.d)}`,text:`${eventName(spread.r.event)} · ${spread.r.name}. De hoogste en laagste quote verschillen ${fmt(spread.d)} decimale punten. Vergelijk alleen dezelfde markt en lijn.`});
  const margins=marginGroups();const high=margins.filter(m=>m.margin>0).sort((a,b)=>a.margin-b.margin)[0];if(high)signals.push({title:"Marge meetbaar",badge:`${fmt(high.margin,1)}%`,text:`Voor ${eventName(high.event)} is een complete uitkomstenset gevonden bij ${high.book.title||"een bookmaker"}. De ruwe impliciete kansen tellen op tot ${fmt(100+high.margin,1)}%.`});
  signals.push({title:"Voorspellingsmodel",badge:"Niet actief",text:"Er is nog geen onafhankelijk, gevalideerd voorspellingsmodel gekoppeld. EDGE presenteert marktdata daarom niet als eigen modelkans."})}
  $("signals").innerHTML=signals.length?signals.slice(0,4).map(s=>`<div class="signal"><div class="signal-title">${esc(s.title)} <span class="badge">${esc(s.badge)}</span></div><p>${esc(s.text)}</p></div>`).join(""):`<div class="empty">Observaties verschijnen zodra odds beschikbaar zijn.</div>`;
- $("coverage").innerHTML=`<div class="market-tile"><small>Feedstatus</small><b class="${state.events.length?"good":"warning"}">${state.events.length?"Verbonden":"Niet gekoppeld"}</b><small>${state.events.length?"Live response ontvangen":"Controleer de API-key en quota."}</small></div><div class="market-tile"><small>Markttypen</small><b>${new Set(state.events.flatMap(marketTypes)).size}</b><small>Unieke marktsleutels in de huidige feed.</small></div><div class="market-tile"><small>Modelprognoses</small><b>Nog niet gevalideerd</b><small>Geen onafhankelijke modelkansen geclaimd.</small></div>`;
+ $("coverage").innerHTML=`<div class="market-tile"><small>Feedstatus</small><b class="${state.error?"bad":state.events.length?"good":"warning"}">${state.error?"Fout":state.events.length?(state.feedMeta?.partial?"Gedeeltelijk":"Verbonden"):"Geen wedstrijden"}</b><small>${esc(state.error|| (state.feedMeta?`${state.feedMeta.sportCount} actieve sporten · regio ${state.feedMeta.regions||state.regions} · ${state.feedMeta.failedSports||0} mislukte aanvragen`:"Nog geen succesvolle feedcheck."))}</small></div><div class="market-tile"><small>Markttypen</small><b>${new Set(state.events.flatMap(marketTypes)).size}</b><small>Unieke marktsleutels in de huidige feed.</small></div><div class="market-tile"><small>Modelprognoses</small><b>Nog niet gevalideerd</b><small>Geen onafhankelijke modelkansen geclaimd.</small></div>`;
 }
 function renderEvents(){
  const q=$("eventSearch").value.toLowerCase(),s=$("sportFilter").value,m=$("marketFilter").value;
@@ -206,11 +206,11 @@ async function fetchOdds(){
   const data=await response.json();
   if(!response.ok)throw new Error(data.error||"De oddsfeed kon niet worden geladen.");
   if(!Array.isArray(data.events))throw new Error("De providerresponse bevat geen evenementenlijst.");
-  state.events=data.events;state.lastFetched=data.fetchedAt||new Date().toISOString();state.error=null;
-  $("feedLabel").textContent="SPORTDATA VERBONDEN";$("feedDot").style.background="var(--green)";
-  refreshFilters();renderAll();toast(`${state.events.length} evenementen geladen.`);
+  state.events=data.events;state.lastFetched=data.fetchedAt||new Date().toISOString();state.error=null;state.feedMeta=data;
+  $("feedLabel").textContent=data.events.length?`SPORTDATA · ${data.events.length} WEDSTRIJDEN`:"FEED BEREIKT · GEEN WEDSTRIJDEN";$("feedDot").style.background=data.events.length?"var(--green)":"var(--amber)";
+  refreshFilters();renderAll();toast(`${state.events.length} evenementen geladen${data.partial?" (gedeeltelijke feed)":""}.`);
  }catch(e){
-  state.error=e.message||"Onbekende fout";$("feedLabel").textContent="FEED NIET BESCHIKBAAR";$("feedDot").style.background="var(--red)";
+  state.error=e.message||"Onbekende fout";state.feedMeta=null;$("feedLabel").textContent="FEED NIET BESCHIKBAAR";$("feedDot").style.background="var(--red)";
   renderAll();toast(state.error);
  }finally{state.loading=false;$("refreshBtn").disabled=false;$("refreshBtn").textContent="↻ Gegevens verversen"}
 }
